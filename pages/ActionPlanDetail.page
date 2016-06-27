@@ -1,0 +1,191 @@
+<!--
+Action Plans v3
+Force.com Labs
+http://appexchange.salesforce.com/listingDetail?listingId=a0N30000003HcINEA0
+
+Copyright (c) 2011, salesforce.com, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+    this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, 
+    this list of conditions and the following disclaimer in the documentation 
+    and/or other materials provided with the distribution.
+    * Neither the name of the salesforce.com, Inc. nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<apex:page id="detailPage" tabStyle="ActionPlan__c" standardController="ActionPlan__c" extensions="ActionPlanDetailController">
+
+    <script type="text/javascript" src="{!$Resource.ActionPlan_Utilities}"></script>
+    <script type="text/javascript" src="{!$Resource.ActionPlans_sortable}"></script>
+    <script type="text/javascript" src="{!$Resource.ActionPlan_ActionPlanDetailScripts}"></script>  
+      
+    <link href="{!$Resource.ActionPlan_ActionPlanDetailStyles}" rel="stylesheet" type="text/css"/>
+    <script>
+        function show(row ){
+            var taskSize = 75;
+            var colSize=20;
+            for( i = 0; i < taskSize; i++ ){
+                for(j=0;j< colSize ;j++){
+                    if( document.getElementById( "detailPage:apForm:detailBlock:taskSection:theTable:" + i +":repTbl:"+ j+ ":commentPanel" ) ){
+                        document.getElementById( 'detailPage:apForm:detailBlock:taskSection:theTable:' + i +':repTbl:'+ j+ ':commentPanel' ).style.display = "none";
+                    }
+                }
+            }
+            var rowSplit = row.split( ":" );
+            row = rowSplit[5];
+            var col=rowSplit[7];
+            document.getElementById( 'detailPage:apForm:detailBlock:taskSection:theTable:' + row + ':repTbl:'+col+':commentPanel' ).style.display = "block";
+        }
+        function hide(row ){
+            var rowSplit = row.split( ":" );
+            row = rowSplit[5];
+            var col=rowSplit[7];
+            document.getElementById( 'detailPage:apForm:detailBlock:taskSection:theTable:' + row + ':repTbl:'+col+':commentPanel' ).style.display = "none";
+        }
+    </script>
+    <apex:sectionHeader title="{!$Label.ap_Action_Plan}" subtitle="{!actionPlan.Name}" help="/help/doc/user_ed.jsp?loc=help" printUrl="/apex/ActionPlanPrint?id={!actionPlan.Id}"/>
+    
+    <apex:form id="apForm">
+    
+        <apex:pageBlock id="detailBlock" title="{!$Label.ap_ActionPlanDetails}" mode="detail">
+            
+            <!-- PAGE BUTTONS -->
+            <apex:pageBlockButtons id="buttons">
+                <apex:commandButton id="edit" action="/apex/ActionPlanCreation?id={!actionPlan.Id}" value="{!$Label.ap_Edit}"/>
+                <apex:commandButton id="delete" action="{!deletePlan}" value="{!$Label.ap_Delete}" onclick="return confirm('{!$Label.ap_AreYouSureAsk}');" />
+                <apex:commandButton id="share" action="/p/share/CustomObjectSharingDetail?parentId={!actionPlan.Id}" value="{!$Label.ap_Sharing}"/>
+                <apex:commandButton value="Sort Data" onclick="window.open('.../apex/TableSortOrder','_blank','width=500,height=400');return false;"/>
+            </apex:pageBlockButtons>
+            <!-- END PAGE BUTTTONS -->
+            
+            <!-- INFORMATION SECTION -->
+            <apex:pageBlockSection title="{!$Label.ap_Information}" columns="1">
+                <apex:panelGrid columns="5" id="theGrid" style="width:100%" columnClasses="labelCol, dataCol, spacerCol, labelCol, dataCol">
+                    <apex:outputText value="{!$Label.ap_Owner}" />
+                    <apex:outputText >{!actionPlan.Owner.Name}&nbsp;[<apex:outputLink value="/{!actionPlan.Id}/a?retURL={!$CurrentPage.URL}">{!$Label.ap_Change}</apex:outputLink>]</apex:outputText>
+                    <apex:outputText >&nbsp;</apex:outputText>
+                    <apex:outputText value="{!$Label.ap_Related_To}" />
+                    <apex:outputText >
+                        <apex:outputField value="{!actionPlan.Account__c}"      rendered="{!(actionPlan.Account__c != null)}" />
+                        <apex:outputField value="{!actionPlan.Contact__c}"      rendered="{!(actionPlan.Contact__c != null)}" />
+                        <apex:outputField value="{!actionPlan.Lead__c}"         rendered="{!(actionPlan.Lead__c != null)}" />
+                        <apex:outputField value="{!actionPlan.Opportunity__c}"  rendered="{!(actionPlan.Opportunity__c != null)}" />
+                        
+                        <!-- Customization Area : Add here your custom Objects -->
+                        <!-- <apex:outputField value="{!actionPlan.CustomObject__c}"    rendered="{!(actionPlan.CustomObject__c != null)}" /> -->
+                        <!-- End of Customization Area -->
+                        
+                        <apex:outputField value="{!actionPlan.Campaign__c}"     rendered="{!(actionPlan.Campaign__c != null)}" />
+                        <apex:outputField value="{!actionPlan.Contract__c}"     rendered="{!(actionPlan.Contract__c != null)}"/>
+                        <apex:outputField value="{!actionPlan.Case__c}"         rendered="{!(actionPlan.Case__c != null)}" />
+                    </apex:outputText>
+                    
+                    <apex:outputText value="{!$Label.ap_Action_Plan} {!$Label.ap_Name}" />
+                    <apex:outputText value="{!actionPlan.Name}" />
+                    <apex:outputText >&nbsp;</apex:outputText>
+                    <apex:outputText value="{!$Label.ap_Status}" />
+                    <apex:outputText >{!Completed} {!$Label.ap_of} {!TaskSize} {!$Label.ap_TasksComplete}</apex:outputText>
+                    
+                    <apex:outputText value="{!$Label.ap_PlanStartDate}" />
+                    <apex:outputText >
+                        <apex:pageBlockSectionItem >
+                            <apex:outputField value="{!actionPlan.StartDate__c}" />
+                        </apex:pageBlockSectionItem>
+                    </apex:outputText>
+                    <apex:outputText >&nbsp;</apex:outputText>
+                    <apex:outputText value="" />
+                    <apex:outputText value="" />  
+                </apex:panelGrid>
+            </apex:pageBlockSection>
+            <!-- END INFORMATION SECTION -->
+            
+            <!-- TASKS SECTION -->
+            <apex:pageBlockSection id="taskSection" title="{!$Label.ap_TaskHeaderSortable}" columns="1">
+                <apex:panelGrid columns="5" columnClasses="labelCol, dataCol, spacerCol, labelCol, dataCol">
+                    <apex:outputText value="{!$ObjectType.ActionPlan__c.fields.SkipWeekends__c.label}"/>
+                    <apex:outputText ><apex:inputCheckbox value="{!ActionPlan.SkipWeekends__c}" disabled="true" /></apex:outputText>
+                    <apex:outputText ></apex:outputText>
+                    <apex:outputText value="{!$Label.ap_Action_Plan_Template}" rendered="{!(ActionPlan.Action_Plan_Template__c != null)}"/>
+                    <apex:outputText rendered="{!(ActionPlan.Action_Plan_Template__c != null)}">
+                        <apex:outputLink value="/apex/ActionPlanTemplateDetail?Id={!ActionPlan.Action_Plan_Template__c}">{!ActionPlan.Action_Plan_Template__r.Name}</apex:outputLink>
+                        <apex:outputText rendered="{!IF(Version == true, true, false)}"><br/><span style="color:#cc0000"><strong>{!$Label.ap_Note}:</strong> {!$Label.ap_APModifyError}</span></apex:outputText>
+                    </apex:outputText>
+                </apex:panelGrid>
+                
+                <apex:panelGrid columns="3" columnClasses="labelCol, dataCol, spacerCol" rendered="{!(ActionPlan.SkipDay__c != null && ActionPlan.SkipWeekends__c == true)}">
+                    <apex:outputText value="{!$ObjectType.ActionPlan__c.fields.SkipDay__c.label}"/>
+                    <apex:outputField value="{!actionPlan.SkipDay__c}" />
+                </apex:panelGrid>
+                <apex:dataTable value="{!tasks}" var="task" id="theTable" styleClass="sortable">
+                     <apex:repeat value="{!coulmnNameList}" var="colName" id="repTbl">
+                         <apex:column headerValue="{!coulmnLabelMap[colName]}" rendered="{!IF(colName=='Comments__c' || colName=='DaysFromStart__c',false,true)}">
+                            <font style="color:{!IF(colName=='ActivityDate__c' && task[colName]!=null && task[colName]< TODAY() && task.Status__c != 'Completed','#cc0000;','black;')}"><apex:outputField value="{!task[colName]}"  /></font>
+                            <apex:outputField value="{!task.Time_Reminder__c}"  rendered="{!IF(colName=='Reminder__c',true,false)}"/>
+                        </apex:column>
+                        <apex:column value="{!task.DaysFromStart__c}" headerClass="daysCol" rendered="{!IF(colName=='DaysFromStart__c',true,false)}">
+                            <apex:facet name="header">{!$ObjectType.APTaskTemplate__c.fields.DaysFromStart__c.label}
+                                <span id="daysAfterTtip_help" class="helpButton">
+                                    <img class="helpOrb" title="{!$Label.ap_days_after_msg}" src="/s.gif"/>
+                                </span>
+                            </apex:facet>
+                       </apex:column>
+                        <apex:column id="columnOne" headerValue="{!$ObjectType.APTaskTemplate__c.fields.Comments__c.label}" headerClass="commentsCol" rendered="{!IF(colName=='Comments__c',true,false)}">
+                            <apex:outputPanel id="commentPanel" style="display:none; position: relative;" >
+                                <div id="commentContainer" onmouseout="hide('{!$Component.theTable.repTbl.columnOne}');">
+                                    <div class="hd">
+                                        <div class="hd-left">{!$Label.ap_Comments}</div>
+                                        <div class="hd-right"></div>
+                                    </div>
+                                    <div class="bd">
+                                        <textarea readonly="true" id="Comments">{!task.Comments__c}</textarea>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!task.Comments__c != null}">(<a onmouseover="show('{!$Component.theTable.repTbl.columnOne}');" style="text-decoration:underline">...</a>)</apex:outputPanel>
+                        </apex:column>
+                    </apex:repeat>
+                </apex:dataTable>
+            </apex:pageBlockSection>
+            <!-- END TASKS SECTION -->
+            
+            <!-- SYSTEM INFORMATION SECTION -->
+            <apex:pageBlockSection title="System Information" columns="1">
+                <apex:panelGrid columns="7" columnClasses="labelCol, dataCol2, dataCol2, spacerCol, labelCol, dataCol2, dataCol2">
+                    <apex:outputText value="{!$Label.ap_CreatedBy}" />
+                    <apex:outputField value="{!ActionPlan.CreatedById}" />
+                    <apex:outputField value="{!ActionPlan.CreatedDate}" />
+                    <apex:outputText />
+                    <apex:outputText value="{!$Label.ap_LastModifiedBy}" />
+                    <apex:outputField value="{!ActionPlan.LastModifiedById}" />
+                    <apex:outputField value="{!ActionPlan.LastModifiedDate}" />
+                </apex:panelGrid>
+            </apex:pageBlockSection>
+            <!-- END SYSTEM INFORMATION SECTION -->
+            
+        </apex:pageBlock>        
+        
+    </apex:form>
+    
+    <script>
+        ActionPlanDetailScripts.formatFields();
+        ActionPlanDetailScripts.removeHover();
+    </script>
+
+</apex:page>
